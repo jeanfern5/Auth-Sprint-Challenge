@@ -42,6 +42,7 @@ function login(req, res) {
     .catch(err => res.status(500).json(err));
 }
 
+//Gets Jokes Once User is Authenticated ------------------------
 function getJokes(req, res) {
   axios
     .get(
