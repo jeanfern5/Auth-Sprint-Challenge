@@ -1,17 +1,29 @@
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
 
-const { authenticate } = require('./middlewares');
+const { authenticate, generateToken } = require('./middlewares');
+const db = require('../database/dbConfig.js');
 
-module.exports = server => {
-  server.post('/api/register', register);
-  server.post('/api/login', login);
-  server.get('/api/jokes', authenticate, getJokes);
-};
-
+//Register-------------------------------------------------
 function register(req, res) {
   // implement user registration
-}
+  const credentials = req.body;
+  console.log('****', credentials, '++++++', req.body)
 
+  const hash = bcrypt.hashSync(credentials.password, 14);
+  credentials.password = hash;
+
+  db('users')
+    .insert(credentials)
+    .then(ids => {
+      const id = ids[0]
+      const token = generateToken({username: credentials.username})
+      res.status(201).json({newUserId: id, token});
+    })
+    .catch(err => res.status(500).json(err));
+} 
+
+//Login ------------------------------------------------------
 function login(req, res) {
   // implement user login
 }
@@ -28,3 +40,9 @@ function getJokes(req, res) {
       res.status(500).json({ message: 'Error Fetching Jokes', error: err });
     });
 }
+
+module.exports = server => {
+  server.post('/api/register', register);
+  server.post('/api/login', login);
+  server.get('/api/jokes', authenticate, getJokes);
+};
