@@ -26,6 +26,20 @@ function register(req, res) {
 //Login ------------------------------------------------------
 function login(req, res) {
   // implement user login
+  const  creds = req.body;
+
+  db('users')
+    .where({username: creds.username})
+    .first()
+    .then(user => {
+      if (user && bcrypt.compareSync(creds.password, user.password)) {
+        const token = generateToken(user);
+        res.status(200).json({welcome: user.username, token});
+      }else {
+        res.status(401).json({message: 'You Have Entered An Incorrect Username or Password'});
+      }
+    })
+    .catch(err => res.status(500).json(err));
 }
 
 function getJokes(req, res) {
@@ -42,7 +56,18 @@ function getJokes(req, res) {
 }
 
 module.exports = server => {
+  // server.get('/api/users', users);
   server.post('/api/register', register);
   server.post('/api/login', login);
   server.get('/api/jokes', authenticate, getJokes);
 };
+
+// //For my own sanity -----------------------------------------
+// function users(req,res) {
+//   db('users')
+//     .select('id', 'username', 'password')
+//     .then(users => {
+//       res.json({ users });
+//     })
+//     .catch(err => res.send(err));
+// };
